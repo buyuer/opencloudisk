@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=2.0, user-scalable=yes" />
+    <title>OpenCloudisk</title>
+    <style>
+
+    </style>
+    <script>
+        'use strict';
+
+        let getFileinfo = (path)=>{
+            let xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = resHandler;
+            xhr.open('GET','/fileinfo?path=' + path);
+            xhr.send();
+        };
+
+        let showFileinfo = (id)=>{};
+
+        let removeAllChild = (id)=>{
+            let node = document.getElementById(id);
+            while(node.hasChildNodes()){
+                node.removeChild(node.firstChild);
+            }
+        };
+
+        let getBackPath = (paths)=>{
+            let backPath = '/';
+            for(let i = 0;i < paths.length-2;i++){
+                backPath += (paths[i] + '/');
+            }
+            return backPath;
+        };
+
+        let logPath;
+
+        function resHandler(){
+            if(this.readyState === 4){
+                if(this.status === 200) {
+                    let Fileinfo = JSON.parse(this.responseText);
+                    let list = document.getElementById('list');
+                    let back = document.getElementById('back');
+
+                    logPath = Fileinfo.path.split('/');
+                    back.setAttribute('onclick','getFileinfo("' + getBackPath(logPath) +'")');
+
+                    removeAllChild('list');
+
+                    let showListD = [],showListF = [];
+
+                    for(let i of Fileinfo.info) {
+                        if (i[1] === 'D') {
+                            showListD.push(i);
+                        } else if (i[1] === 'F') {
+                            showListF.push(i);
+                        }
+                    }
+                    for(let i of showListD) {
+                        let name = document.createElement('a');
+                        name.setAttribute('onclick', 'getFileinfo("' + Fileinfo.path + i[0] + '/' + '")');
+                        name.setAttribute('href', '#');
+                        name.id = Fileinfo.path + i[0] + '/';
+                        name.innerText = i[0];
+                        list.appendChild(name);
+                        list.appendChild(document.createElement('br'));
+                    }
+                    for(let i of showListF){
+                        let name = document.createElement('a');
+                        let size = document.createElement('a');
+                        name.setAttribute('href','/filedown?path=' + Fileinfo.path + i[0]);
+                        name.id = Fileinfo.path + i[0];
+                        name.innerText = i[0];
+                        size.innerText = 'size:' + i[2] + ' bytes';
+                        list.appendChild(name);
+                        list.appendChild(size);
+                        list.appendChild(document.createElement('br'));
+                    }
+                }
+            }
+        }
+        getFileinfo('/');
+    </script>
+</head>
+
+<body>
+<p style="color: darkgoldenrod;font-size: 50px;">Welcome OpenCloudisk</p>
+<a id="back" href="#">
+    back
+</a>
+<p>-------------------------------------------------------------------------------------------------------</p>>
+<div id="list">
+
+</div>
+</body>
+
+</html>
