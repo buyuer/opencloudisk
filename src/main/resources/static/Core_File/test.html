@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:v-on="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>测试</title>
+    <script src="https://cdn.staticfile.org/vue/2.2.2/vue.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <Dis_info file_name = "董喜航1" is_file="T1" file_size = "1111"></Dis_info>
+        <Dis_info file_name = "董喜航2" is_file="T2" file_size = "2222"></Dis_info>
+        <Dis_info file_name = "董喜航3" is_file="T3" file_size = "3333"></Dis_info>
+
+        <button onclick="test('12')">测试</button>
+        {{Path_Data}}
+        <dis-size></dis-size>
+    </div>
+<script type="text/javascript">
+    Vue.component('Dis_info',{
+        props:['file_name','is_file','file_size'],
+        template: '<div v-if="is_file===\'T1\'">{{file_name}}--{{is_file}}--{{file_size}}</div>' +
+            '<div v-else-if="is_file===\'T2\'">{{file_name}}--{{is_file}}--{{file_size}}</div>' +
+            '<div v-else-if="is_file===\'T3\'">{{file_name}}--{{is_file}}--{{file_size}}</div>'
+    })
+    Vue.component('dis-size',{
+       template: '<h1>123456</h1>'
+    })
+    var aaa = new Vue({
+        el: '#app',
+        data:{
+            id:1,
+            Path_Data:[
+            ]
+        },
+        methods:{
+            add_info:function (str) {
+                this.Path_Data.push({
+                    id:this.id++,
+                    doc_name:'www'+this.id,
+                    is_doc:'t' + this.id,
+                    doc_size:'qq'+this.id
+                })
+            }
+        }
+    });
+    var test=function (str) {
+        aaa.add_info(str);
+        alert(aaa.Path_Data.length);
+    }
+</script>
+</body>
+</html>

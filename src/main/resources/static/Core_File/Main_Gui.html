@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:v-on="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>OpenCloudDisk</title>
+
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdn.staticfile.org/vue/2.2.2/vue.min.js"></script>
+    <script type="text/javascript" src="./Get_Data.js"></script>
+    <script>
+        var Send_Request = (url) => {                                   //查询
+            var xmlhttp;
+            if(window.XMLHttpRequest)
+            {
+                xmlhttp = new XMLHttpRequest();                         //IE7 Firefox chrome opera safari
+            }
+            else
+            {
+                xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");       //IE6 IE5
+            }
+            xmlhttp.onreadystatechange=()=>{
+                if(xmlhttp.readyState===4 && xmlhttp.status===200)      //请求成功
+                {
+                    JS_Dis_All(xmlhttp.responseText);                   //显示路径，文件信息
+                }
+            };
+            xmlhttp.open("GET","/fileinfo?path=" +'/' + url,true);
+            xmlhttp.send();
+        };
+        var Send_Download=(url)=>{                                      //下载
+            document.location = '/filedown?path=' + url;
+        };
+    </script>
+</head>
+<body>
+<div class="container">
+    <div class="row clearfix">
+        <div class="col-md-12 column">
+            <div class="page-header">
+                <h1>
+                    Welcome to OpenCloudDisk <small>V-0.1.1</small>
+                </h1>
+            </div>
+        </div>
+    </div>
+    <div class="row clearfix">
+        <div class="col-md-3 column">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        文件系统
+                    </h3>
+                </div>
+
+               <div class="panel-body">
+                    阅览及下载
+               </div>
+
+            </div>
+        </div>
+        <div class="col-md-9 column" id="v_path_dis" >
+            <ul class="breadcrumb">                             <!--面包片路径显示 -->
+                <li>
+                    <a onclick="Send_Request('')">Home</a>      <!--添加Home点击事件 -->
+                </li>
+                <li v-for="obj in Objects">
+                    <a v-on:click="Send_Request(obj.file_path)">
+                        {{obj.file_name}}
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="row clearfix" id="v_data_dis" >
+        <div v-for="datas in Datas_Info">
+            <div class="col-md-3 column"></div>
+            <div class="col-md-7 column" style="background-color: bisque">
+                <Dis_info v-bind:file_info="datas.doc_name" v-bind:is_file="datas.is_doc"></Dis_info>
+            </div>
+            <div class="col-md-2 column" style="background-color: bisque">
+                <dis-size v-bind:file_info="datas.doc_size" v-bind:is_file="datas.is_doc"></dis-size>
+            </div>
+        </div>
+    </div>
+</div>
+<!--                    VUE                  -->
+<!--                    VUE                  -->
+<!--                    VUE                  -->
+<script type="text/javascript">
+    var Vue_Dis_Path = new Vue({
+        el:'#v_path_dis',
+        data:{
+            temp:'',
+            Objects:[]
+        },
+        computed:{
+        },
+        methods:{
+            Clear_Path: function(){
+                this.Objects=[];
+            },
+            Dis_Path:function (str) {
+                this.Clear_Path();
+                var Obj = JSON.parse(str);
+                var relative_path =  Str_Process(Obj.path);
+                for(var i = 0 ;i < relative_path.length;i++)
+                {
+                    //每一个路径都正确加载进去
+                    if(i===0)
+                        temp = relative_path[i];
+                    else
+                        temp += '/' + relative_path[i];
+                    this.Objects.push({
+                        file_name: relative_path[i],
+                        file_path: temp
+                    });
+                }
+            }
+        }
+    });
+    var JS_Dis_All =function(str) {
+        Vue_Dis_Path.Dis_Path(str);
+        Vue_Dis_Data.Dis_Data(str);
+    }
+</script>
+<script type="text/javascript">
+    //定义一个组件
+    Vue.component('Dis_info',{
+        props:['file_info','is_file'],
+        template: '<div v-if="is_file===\'D\'" v-on:click="V_Send_Request()" STYLE="color: mediumblue">{{file_info}}</div> ' +
+            '<div v-else-if="is_file===\'F\'" v-on:click="V_Send_Download()" >{{file_info}}</div>',
+        methods:{
+            V_Send_Request:function () {
+                Send_Request(g_url+this.file_info);
+            },
+            V_Send_Download:function () {
+                Send_Download(g_url+this.file_info);
+            }
+        }
+    });
+
+    Vue.component('dis-size',{
+        props:['file_info','is_file'],
+        template: '<div v-if="is_file===\'F\'" >{{file_info}}</div> ' +
+            '<div v-else-if="is_file===\'D\'" >&nbsp;</div>'
+    });
+
+    var Vue_Dis_Data = new Vue({
+        el:"#v_data_dis",
+        data:{
+            id:0,
+            Datas_Info:[]
+        },
+        computed: {
+        },
+        methods: {
+            Clear_Datas: function(){
+                this.Datas_Info=[];
+                this.id=0;
+            },
+            Dis_Data:function (str) {
+                this.Clear_Datas();
+                var Obj = JSON.parse(str);
+                var temp=[
+                    ['0','0','0']
+                ];
+                var temp_num = 0;
+                for(var ii = 0 ; ii < Obj.info.length; ii++)
+                {
+                    if(Obj.info[ii][1] === 'D')
+                    {
+                        temp[temp_num] = Obj.info[ii];
+                        temp_num++;
+                    }
+                }
+                for(var iii = 0 ; iii < Obj.info.length; iii++)
+                {
+                    if(Obj.info[iii][1] === 'F')
+                    {
+                        temp[temp_num] = Obj.info[iii];
+                        temp_num++;
+                    }
+                }
+                for(var i = 0 ; i < temp.length; i++)
+                {
+                    this.Datas_Info.push({
+                        id:++this.id,
+                        doc_name:temp[i][0],
+                        is_doc  :temp[i][1],
+                        doc_size:temp[i][2],
+                    })
+                }
+            }
+        }
+    });
+    Send_Request('/');
+</script>
+<!--                    VUE                  -->
+</body>
+</html>
